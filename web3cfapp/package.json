@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -16,7 +16,7 @@
     "thirdweb": "^5.105.48"
   },
   "devDependencies": {
-    "@types/node": "^24.5.0",
+    "@types/node": "^20.11.0",
     "@types/react": "19.1.10",
     "@types/react-dom": "19.1.7",
     "autoprefixer": "^10.0.1",
