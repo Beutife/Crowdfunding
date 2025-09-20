@@ -1,6 +1,6 @@
-/* @tailwind base;
+@tailwind base;
 @tailwind components;
-@tailwind utilities;
+@tailwind utilities; 
 
 :root {
   line-height: 1.5;
@@ -17,5 +17,6 @@
 
 @layer base {
   body {
-    /*@apply bg-zinc-950 text-neutral-200;*/
- 
+    @apply bg-zinc-950 text-neutral-200;
+  }
+}  
