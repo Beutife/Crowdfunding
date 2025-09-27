@@ -3,9 +3,12 @@ import { client } from "@/app/client";
 import { CROWDFUNDING_FACTORY } from "@/constant/contract";
 import  MyCampaignCard  from "@/components/CampaignCards";
 import { useState } from "react";
-import { getContract } from "thirdweb";
+//import { getContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
-import { deployPublishedContract } from "thirdweb/deploys";
+//import { deployPublishedContract } from "thirdweb/deploys";
+import { useSendTransaction } from "thirdweb/react";
+import { prepareContractCall } from "thirdweb";
+import { getContract } from "thirdweb";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 
 export default function DashboardPage() {
@@ -203,8 +206,11 @@ const CreateCampaignModal = ({ setIsModalOpen, refetch }: CreateCampaignModalPro
     const [campaignGoal, setCampaignGoal] = useState<number>(1);
     const [campaignDeadline, setCampaignDeadline] = useState<number>(1);
     
-    // Deploy contract from CrowdfundingFactory
-    const handleDeployContract = async () => {
+    // Use the hook at component level
+    const { mutateAsync: sendTransaction } = useSendTransaction();
+    
+    // Create campaign using your factory contract
+    const handleCreateCampaign = async () => {
         if (!account) {
             alert("Please connect your wallet first!");
             return;
@@ -217,130 +223,62 @@ const CreateCampaignModal = ({ setIsModalOpen, refetch }: CreateCampaignModalPro
 
         setIsDeployingContract(true);
         try {
-            console.log("Deploying contract...");
+            console.log("Creating campaign through factory...");
             const liskSepolia = defineChain(4202);
             
-            const contractAddress = await deployPublishedContract({
+            // Use your factory contract
+            const factoryContract = getContract({
                 client: client,
                 chain: liskSepolia,
-                account: account,
-                contractId: "Crowdfunding",
-                contractParams: {
-                    _name: campaignName,
-                    _description: campaignDescription,
-                    _goal: BigInt(campaignGoal),
-                    _deadline: BigInt(Math.floor(Date.now() / 1000) + (campaignDeadline * 24 * 60 * 60))
-                },
-                publisher: "0xEe29620D0c544F00385032dfCd3Da3f99Affb8B2",
-                version: "1.0.6",
+                address: CROWDFUNDING_FACTORY,
             });
+
+            // Calculate deadline timestamp
+            const deadlineTimestamp = Math.floor(Date.now() / 1000) + (campaignDeadline * 24 * 60 * 60);
             
-            console.log("Contract deployed at:", contractAddress);
+            // Prepare the transaction
+            const transaction = prepareContractCall({
+                contract: factoryContract,
+                method: "function createCampaign(string _name, string _description, uint256 _goal, uint256 _deadline)",
+                params: [
+                    campaignName,
+                    campaignDescription,
+                    BigInt(campaignGoal * 10**18), // Convert ETH to Wei
+                    BigInt(deadlineTimestamp)
+                ],
+            });
+
+            // Execute the transaction
+            const result = await sendTransaction(transaction);
+            
+            console.log("Campaign created successfully:", result);
             alert("Campaign created successfully!");
-            refetch(); // Fixed: call the function
+            refetch();
             setIsModalOpen(false);
         } catch (error) {
-            console.error("Error deploying contract:", error);
-            alert("Failed to create campaign. Please try again.");
+            console.error("Error creating campaign:", error);
+            alert(
+                `Failed to create campaign: ${
+                    typeof error === "object" && error !== null && "message" in error
+                        ? (error as { message?: string }).message
+                        : "Please try again."
+                }`
+            );
         } finally {
             setIsDeployingContract(false);
         }
     };
 
-    const handleCampaignGoal = (value: number) => {
-        if (value < 1) {
-            setCampaignGoal(1);
-        } else {
-            setCampaignGoal(value);
-        }
-    }
-
-    const handleCampaignDeadlineChange = (value: number) => {
-        if (value < 1) {
-            setCampaignDeadline(1);
-        } else {
-            setCampaignDeadline(value);
-        }
-    }
+    // ... rest of your component JSX stays the same, but change the button onClick:
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex justify-center items-center backdrop-blur-sm z-50">
-            <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-6 m-4">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">Create Campaign</h2>
-                    <button
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
-                        onClick={() => setIsModalOpen(false)}
-                    >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Name *</label>
-                        <input 
-                            type="text" 
-                            value={campaignName}
-                            onChange={(e) => setCampaignName(e.target.value)}
-                            placeholder="Enter campaign name"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                            required
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Description *</label>
-                        <textarea
-                            value={campaignDescription}
-                            onChange={(e) => setCampaignDescription(e.target.value)}
-                            placeholder="Describe your campaign"
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                            required
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Goal (ETH)</label>
-                        <input 
-                            type="number"
-                            value={campaignGoal}
-                            onChange={(e) => handleCampaignGoal(parseInt(e.target.value) || 1)}
-                            min="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        />
-                    </div>
-                    
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Campaign Duration (Days)</label>
-                        <input 
-                            type="number"
-                            value={campaignDeadline}
-                            onChange={(e) => handleCampaignDeadlineChange(parseInt(e.target.value) || 1)}
-                            min="1"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        />
-                    </div>
-
-                    <button
-                        className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        onClick={handleDeployContract}
-                        disabled={isDeployingContract}
-                    >
-                        {isDeployingContract ? (
-                            <div className="flex items-center justify-center">
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                Creating Campaign...
-                            </div>
-                        ) : (
-                            "Create Campaign"
-                        )}
-                    </button>
-                </div>
-            </div>
-        </div>
+        // ... your existing JSX until the button
+        <button
+            className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            onClick={handleCreateCampaign} // Changed from handleDeployContract
+            disabled={isDeployingContract}
+        >
+            {/* ... rest of button content */}
+        </button>
     );
 };
