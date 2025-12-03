@@ -11,6 +11,8 @@ import { prepareContractCall } from "thirdweb";
 import { getContract } from "thirdweb";
 import { useActiveAccount, useReadContract } from "thirdweb/react";
 
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
     const account = useActiveAccount();
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -269,16 +271,59 @@ const CreateCampaignModal = ({ setIsModalOpen, refetch }: CreateCampaignModalPro
         }
     };
 
-    // ... rest of your component JSX stays the same, but change the button onClick:
-
     return (
-        // ... your existing JSX until the button
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      {/* modal box */}
+      <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg relative">
+        {/* close button */}
         <button
-            className="w-full mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-            onClick={handleCreateCampaign} // Changed from handleDeployContract
-            disabled={isDeployingContract}
+          className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          onClick={() => setIsModalOpen(false)}
         >
-            {/* ... rest of button content */}
+          ✕
         </button>
-    );
+
+        <h2 className="text-2xl font-bold mb-4 text-gray-900">Create New Campaign</h2>
+
+        {/* form fields */}
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Campaign Name"
+            value={campaignName}
+            onChange={(e) => setCampaignName(e.target.value)}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+          <textarea
+            placeholder="Description"
+            value={campaignDescription}
+            onChange={(e) => setCampaignDescription(e.target.value)}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+          <input
+            type="number"
+            placeholder="Goal (ETH)"
+            value={campaignGoal}
+            onChange={(e) => setCampaignGoal(Number(e.target.value))}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+          <input
+            type="number"
+            placeholder="Deadline (Days)"
+            value={campaignDeadline}
+            onChange={(e) => setCampaignDeadline(Number(e.target.value))}
+            className="w-full border rounded-lg p-3 focus:ring-2 focus:ring-purple-500 outline-none"
+          />
+
+          <button
+            onClick={handleCreateCampaign}
+            disabled={isDeployingContract}
+            className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50"
+          >
+            {isDeployingContract ? "Creating..." : "Create Campaign"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 };

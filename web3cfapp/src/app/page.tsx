@@ -1,10 +1,13 @@
 "use client"
+
 import { getContract } from "thirdweb";
 import { client } from "./client";
 import { defineChain } from "thirdweb/chains";
 import { CROWDFUNDING_FACTORY } from "@/constant/contract";
 import { useReadContract, useActiveAccount } from "thirdweb/react";
 import CampaignCard from "@/components/CampaignCards";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
   const account = useActiveAccount();

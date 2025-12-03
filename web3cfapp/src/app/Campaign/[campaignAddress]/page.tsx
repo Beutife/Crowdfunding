@@ -7,6 +7,8 @@ import { getContract, prepareContractCall, ThirdwebContract } from "thirdweb";
 import { defineChain } from "thirdweb/chains";
 import { useReadContract, useActiveAccount, TransactionButton, lightTheme } from "thirdweb/react";
 
+export const dynamic = "force-dynamic";
+
 type CreateTierModalProps = {
   setIsModalOpen: (value: boolean) => void;
   contract: ThirdwebContract;
@@ -288,7 +290,7 @@ export default function CampaignPage() {
                       <div className="col-span-full text-center py-8 text-gray-400">
                         <p>No tiers available</p>
                         {owner === account?.address && (
-                          <p className="text-sm mt-2">Click "Edit" to add your first tier!</p>
+                          <p className="text-sm mt-2">Click &quot;Edit&quot; to add your first tier!</p>
                         )}
                       </div>
                     )

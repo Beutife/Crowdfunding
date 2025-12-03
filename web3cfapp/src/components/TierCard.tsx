@@ -128,7 +128,7 @@ const TierCard: React.FC<TierCardProps> = ({
             {isEditing && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                     <p className="text-xs text-gray-500 text-center">
-                        ✏️ Edit Mode - Use "Remove" to delete this tier
+                         Edit Mode - Use &quot;Remove&quot; to delete this tier
                     </p>
                 </div>
             )}
